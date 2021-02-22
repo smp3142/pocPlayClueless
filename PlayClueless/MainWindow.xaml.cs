@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Windows;
 using System.Windows.Controls;
 
@@ -27,8 +28,18 @@ namespace PlayClueless
                 _ => throw new IndexOutOfRangeException(),
             };
             CluelessGame game = new CluelessGame(difficulty);
+            SetGameWindowPosition(game);
             game.Show();
             menuWindow.Close();
+        }
+
+        private void SetGameWindowPosition(CluelessGame game)
+        {
+            game.WindowStartupLocation = WindowStartupLocation.Manual;
+            game.Left = Properties.Settings.Default.WindowLeft;
+            game.Top = Properties.Settings.Default.WindowTop;
+            game.Width = Properties.Settings.Default.WindowWidth;
+            game.Height = Properties.Settings.Default.WindowHeight;
         }
     }
 }

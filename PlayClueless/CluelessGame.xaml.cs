@@ -8,7 +8,6 @@ using System.Windows.Shapes;
 
 using CluelessCrosswords;
 
-// TODO: Save window size and position
 // TODO: Save game and continue
 // TODO: Add option to click on letters in Clueless
 // TODO: Have victory check if all words are good
@@ -385,6 +384,15 @@ namespace PlayClueless
                 item.FontSize = size1;
             }
             currentFontSize = size1;
+        }
+
+        private void gameWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+            Properties.Settings.Default.WindowLeft = gameWindow.Left;
+            Properties.Settings.Default.WindowTop = gameWindow.Top;
+            Properties.Settings.Default.WindowWidth = gameWindow.ActualWidth;
+            Properties.Settings.Default.WindowHeight = gameWindow.ActualHeight;
+            Properties.Settings.Default.Save();
         }
     }
 }
