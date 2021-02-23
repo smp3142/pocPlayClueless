@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Windows;
 using System.Windows.Controls;
@@ -8,22 +10,30 @@ using System.Windows.Shapes;
 
 using CluelessCrosswords;
 
-// TODO: Save game and continue
+using Newtonsoft.Json;
+
 // TODO: Add option to click on letters in Clueless
 // TODO: Have victory check if all words are good
 
 namespace PlayClueless
 {
+    public static class SaveData
+    {
+        public static readonly string puzzleFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath) + "/puzzleFile");
+        public static readonly string movesFile = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(ConfigurationManager.OpenExeConfiguration(ConfigurationUserLevel.PerUserRoamingAndLocal).FilePath) + "/savedMoves");
+    }
+
     /// <summary>
     /// Interaction logic for CluelessGame.xaml
     /// </summary>
     public partial class CluelessGame : Window
     {
         public Difficulty difficulty;
-        private Puzzle puzzle;
-        private TextBlock[] HintsTextBlocks;
-        private TextBlock[,] GameBoardTextBlocks;
-        private TextBlock[] LettersTextBlocks;
+        public Puzzle puzzle;
+        private string[] lettersPlayed;
+        private readonly TextBlock[] HintsTextBlocks;
+        private readonly TextBlock[,] GameBoardTextBlocks;
+        private readonly TextBlock[] LettersTextBlocks;
 
         private readonly Brush GivenLetterColor = (Brush)new BrushConverter().ConvertFromString("#4575b4");
         private readonly Brush ErrorLetterColor = (Brush)new BrushConverter().ConvertFromString("#d73027");
@@ -50,7 +60,20 @@ namespace PlayClueless
             MakeNewGame();
         }
 
-        public CluelessGame(Difficulty difficulty)
+        public CluelessGame(Difficulty gameDifficulty)
+        {
+            InitializeComponent();
+
+            difficulty = gameDifficulty;
+
+            HintsTextBlocks = new TextBlock[26];
+            GameBoardTextBlocks = new TextBlock[13, 13];
+            LettersTextBlocks = new TextBlock[26];
+
+            MakeNewGame();
+        }
+
+        public CluelessGame(Puzzle savedPuzzle, string[] savedLettersPlayed)
         {
             InitializeComponent();
 
@@ -58,7 +81,29 @@ namespace PlayClueless
             GameBoardTextBlocks = new TextBlock[13, 13];
             LettersTextBlocks = new TextBlock[26];
 
-            MakeNewGame();
+            puzzle = savedPuzzle;
+            lettersPlayed = savedLettersPlayed;
+
+            InitizeTextBlocksArrays();
+            AddHints();
+            AddGameBoard();
+            AddLetters();
+            AddGridBorders();
+
+            AddSavedLetters();
+
+            SetColors();
+        }
+
+        private void AddSavedLetters()
+        {
+            for (int i = 0; i < lettersPlayed.Length; i++)
+            {
+                if (lettersPlayed[i] != null)
+                {
+                    SetCellValue(HintsTextBlocks[i], lettersPlayed[i]);
+                }
+            }
         }
 
         private void InitizeTextBlocksArrays()
@@ -102,14 +147,16 @@ namespace PlayClueless
             }
         }
 
-        private void Selection_LostFocus(object sender, RoutedEventArgs e)
-        {
-            SetColors();
-        }
-
         private void MakeNewGame()
         {
             puzzle = new Games(1, Difficulty.Hard).Puzzles[0];
+            lettersPlayed = new string[26];
+
+            string json = JsonConvert.SerializeObject(puzzle);
+            File.WriteAllText(SaveData.puzzleFile, json);
+            json = JsonConvert.SerializeObject(lettersPlayed);
+            File.WriteAllText(SaveData.movesFile, json);
+
             InitizeTextBlocksArrays();
             AddHints();
             AddGameBoard();
@@ -235,6 +282,10 @@ namespace PlayClueless
             Keyboard.ClearFocus();
         }
 
+        private void Selection_LostFocus(object sender, RoutedEventArgs e)
+        {
+            SetColors();
+        }
 
         private void TextBlock_MouseDown(object sender, MouseButtonEventArgs e)
         {
@@ -271,7 +322,8 @@ namespace PlayClueless
 
         private void SaveState()
         {
-            // TODO: Save state
+            string json = JsonConvert.SerializeObject(lettersPlayed);
+            File.WriteAllText(SaveData.movesFile, json);
         }
 
         private void CheckWin()
@@ -286,9 +338,14 @@ namespace PlayClueless
 
         private void SetCellValue(TextBlock textBlock, string key)
         {
-            foreach (TextBlock item in HintsTextBlocks)
+            for (int i = 0; i < HintsTextBlocks.Length; i++)
             {
-                if (item.Name == textBlock.Name) { item.Text = key; break; }
+                if (HintsTextBlocks[i].Name == textBlock.Name)
+                {
+                    HintsTextBlocks[i].Text = key;
+                    lettersPlayed[i] = key;
+                    break;
+                }
             }
             foreach (TextBlock item in GameBoardTextBlocks)
             {
@@ -386,7 +443,7 @@ namespace PlayClueless
             currentFontSize = size1;
         }
 
-        private void gameWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private void GameWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
             Properties.Settings.Default.WindowLeft = gameWindow.Left;
             Properties.Settings.Default.WindowTop = gameWindow.Top;

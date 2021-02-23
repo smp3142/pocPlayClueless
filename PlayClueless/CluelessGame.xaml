@@ -6,7 +6,7 @@
         xmlns:local="clr-namespace:PlayClueless"
         mc:Ignorable="d" x:Name="gameWindow"
         Title="Clueless Crossword" Height="600" Width="800"
-        MinHeight="600" MinWidth="800" SizeChanged="WindowResized" Closing="gameWindow_Closing">
+        MinHeight="600" MinWidth="800" SizeChanged="WindowResized" Closing="GameWindow_Closing">
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="2*"/>
