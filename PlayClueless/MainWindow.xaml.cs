@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -18,6 +17,7 @@ namespace PlayClueless
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = this;
             CheckForSaveData();
         }
 

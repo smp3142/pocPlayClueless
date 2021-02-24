@@ -12,7 +12,6 @@ using CluelessCrosswords;
 
 using Newtonsoft.Json;
 
-// TODO: Add option to click on letters in Clueless
 // TODO: Have victory check if all words are good
 
 namespace PlayClueless
@@ -180,10 +179,21 @@ namespace PlayClueless
                 {
                     LettersTextBlocks[i].Foreground = LetterColor;
                 }
+                LettersTextBlocks[i].MouseDown += Letters_MouseDown;
                 LettersTextBlocks[i].Focusable = false;
                 Grid.SetColumn(LettersTextBlocks[i], i % 2);
                 Grid.SetRow(LettersTextBlocks[i], i / 2);
                 LettersGrid.Children.Add(LettersTextBlocks[i]);
+            }
+        }
+
+        private void Letters_MouseDown(object sender, MouseButtonEventArgs e)
+        {
+            TextBlock letterBlock = sender as TextBlock;
+            IInputElement focusedControl = Keyboard.FocusedElement;
+            if (focusedControl is TextBlock focusedTextBlock)
+            {
+                SetCellValue(focusedTextBlock, letterBlock.Text);
             }
         }
 
