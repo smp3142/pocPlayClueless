@@ -51,7 +51,7 @@ namespace PlayClueless
             menuWindow.Close();
         }
 
-        private void SetGameWindowPosition(CluelessGame game)
+        private static void SetGameWindowPosition(CluelessGame game)
         {
             game.WindowStartupLocation = WindowStartupLocation.Manual;
             game.Left = Properties.Settings.Default.WindowLeft;

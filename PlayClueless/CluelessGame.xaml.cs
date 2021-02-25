@@ -12,8 +12,6 @@ using CluelessCrosswords;
 
 using Newtonsoft.Json;
 
-// TODO: Have victory check if all words are good
-
 namespace PlayClueless
 {
     public static class SaveData
@@ -151,16 +149,37 @@ namespace PlayClueless
             puzzle = new Games(1, Difficulty.Hard).Puzzles[0];
             lettersPlayed = new string[26];
 
-            string json = JsonConvert.SerializeObject(puzzle);
-            File.WriteAllText(SaveData.puzzleFile, json);
-            json = JsonConvert.SerializeObject(lettersPlayed);
-            File.WriteAllText(SaveData.movesFile, json);
+            WriteGameOptions();
+            WriteSaveData();
 
             InitizeTextBlocksArrays();
             AddHints();
             AddGameBoard();
             AddLetters();
             AddGridBorders();
+        }
+
+        private void WriteGameOptions()
+        {
+            Properties.Settings.Default.WindowLeft = gameWindow.Left;
+            Properties.Settings.Default.WindowTop = gameWindow.Top;
+            Properties.Settings.Default.WindowWidth = gameWindow.ActualWidth;
+            Properties.Settings.Default.WindowHeight = gameWindow.ActualHeight;
+            Properties.Settings.Default.Save();
+        }
+
+        private void WriteSaveData()
+        {
+            string json = JsonConvert.SerializeObject(puzzle);
+            File.WriteAllText(SaveData.puzzleFile, json);
+            json = JsonConvert.SerializeObject(lettersPlayed);
+            File.WriteAllText(SaveData.movesFile, json);
+        }
+
+        private void WriteSaveState()
+        {
+            string json = JsonConvert.SerializeObject(lettersPlayed);
+            File.WriteAllText(SaveData.movesFile, json);
         }
 
         private void AddLetters()
@@ -286,7 +305,7 @@ namespace PlayClueless
             }
         }
 
-        private void ClearFocus(TextBlock textBlock)
+        private static void ClearFocus(TextBlock textBlock)
         {
             FocusManager.SetFocusedElement(FocusManager.GetFocusScope(textBlock), null);
             Keyboard.ClearFocus();
@@ -330,20 +349,23 @@ namespace PlayClueless
             ClearFocus(textBlock);
         }
 
-        private void SaveState()
-        {
-            string json = JsonConvert.SerializeObject(lettersPlayed);
-            File.WriteAllText(SaveData.movesFile, json);
-        }
-
         private void CheckWin()
         {
-            for (int i = 0; i < HintsTextBlocks.Length; i++)
-            {
-                if (HintsTextBlocks[i].Text != puzzle.Key[i]) { return; }
-            }
+            if (!AllHintsFilledIn()) { return; }
+            if (!CluelessCrosswords.Games.IsAllWordsValid(puzzle)) { return; }
+
             var again = MessageBox.Show("Congratulations, you have solved the puzzle!\nPlay again ?", "Win", MessageBoxButton.YesNo);
             if (again == MessageBoxResult.Yes) { MakeNewGame(); }
+        }
+
+        private bool AllHintsFilledIn()
+        {
+            foreach (TextBlock item in HintsTextBlocks)
+            {
+                if (int.TryParse(item.Text, out _ )) { return false; }
+                if (HintsTextBlocks.Count(block => block.Text == item.Text) > 1) { return false; }
+            }
+            return true;
         }
 
         private void SetCellValue(TextBlock textBlock, string key)
@@ -367,7 +389,7 @@ namespace PlayClueless
             ClearFocus(textBlock);
             SetColors();
             CheckWin();
-            SaveState();
+            WriteSaveState();
         }
 
         private void SetColors()
@@ -455,11 +477,7 @@ namespace PlayClueless
 
         private void GameWindow_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            Properties.Settings.Default.WindowLeft = gameWindow.Left;
-            Properties.Settings.Default.WindowTop = gameWindow.Top;
-            Properties.Settings.Default.WindowWidth = gameWindow.ActualWidth;
-            Properties.Settings.Default.WindowHeight = gameWindow.ActualHeight;
-            Properties.Settings.Default.Save();
+            WriteGameOptions();
         }
     }
 }
