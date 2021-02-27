@@ -2,6 +2,7 @@
 using System.Configuration;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
@@ -352,17 +353,42 @@ namespace PlayClueless
         private void CheckWin()
         {
             if (!AllHintsFilledIn()) { return; }
-            if (!CluelessCrosswords.Games.IsAllWordsValid(puzzle)) { return; }
+            if (!AllWordsValid()) { return; }
 
             var again = MessageBox.Show("Congratulations, you have solved the puzzle!\nPlay again ?", "Win", MessageBoxButton.YesNo);
             if (again == MessageBoxResult.Yes) { MakeNewGame(); }
+        }
+
+        private bool AllWordsValid()
+        {
+            // Get all rows
+            for (int row = 0; row < Games.ROWS; row++)
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int col = 0; col < Games.COLS; col++)
+                {
+                    stringBuilder.Append(GameBoardTextBlocks[row, col].Text);
+                }
+                if (!Games.AreAllWordsInLineValid(stringBuilder.ToString().Split(Games.EMPTYCHAR))) { return false; }
+            }
+            // Get all cols
+            for (int col = 0; col < Games.COLS; col++)
+            {
+                StringBuilder stringBuilder = new StringBuilder();
+                for (int row = 0; row < Games.ROWS; row++)
+                {
+                    stringBuilder.Append(GameBoardTextBlocks[row, col].Text);
+                }
+                if (!Games.AreAllWordsInLineValid(stringBuilder.ToString().Split(Games.EMPTYCHAR))) { return false; }
+            }
+            return true;
         }
 
         private bool AllHintsFilledIn()
         {
             foreach (TextBlock item in HintsTextBlocks)
             {
-                if (int.TryParse(item.Text, out _ )) { return false; }
+                if (int.TryParse(item.Text, out _)) { return false; }
                 if (HintsTextBlocks.Count(block => block.Text == item.Text) > 1) { return false; }
             }
             return true;
